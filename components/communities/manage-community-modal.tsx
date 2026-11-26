@@ -229,9 +229,10 @@ export function ManageCommunityModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition"
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 active:scale-95 transition"
+            aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -240,27 +241,27 @@ export function ManageCommunityModal({
           <button
             type="button"
             onClick={() => setActiveTab("members")}
-            className={`py-3 flex items-center gap-2 border-b-2 transition ${
+            className={`py-3 flex items-center gap-2 border-b-2 active:scale-95 transition ${
               activeTab === "members"
                 ? "border-[#5865F2] text-white"
                 : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Members ({members.length})</span>
+            <span>Members (<span className="tabular-nums font-mono">{members.length}</span>)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("requests")}
-            className={`py-3 flex items-center gap-2 border-b-2 transition ${
+            className={`py-3 flex items-center gap-2 border-b-2 active:scale-95 transition ${
               activeTab === "requests"
                 ? "border-[#5865F2] text-white"
                 : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Join Requests ({requests.length})</span>
+            <span>Join Requests (<span className="tabular-nums font-mono">{requests.length}</span>)</span>
           </button>
 
           {isAdmin && (

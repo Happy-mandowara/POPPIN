@@ -109,7 +109,9 @@ export function AppTopbar({ onOpenCreatePost, onToggleMobileSidebar }: AppTopbar
             <button
               type="button"
               onClick={() => setIsUserMenuOpen((prev) => !prev)}
-              className="p-0.5 rounded-full border border-white/10 hover:border-[#5865F2] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+              aria-expanded={isUserMenuOpen}
+              aria-haspopup="true"
+              className="p-0.5 rounded-full border border-white/10 hover:border-[#5865F2] active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
               aria-label="User Account Menu"
             >
               {profile?.avatar ? (

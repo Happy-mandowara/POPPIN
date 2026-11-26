@@ -6,7 +6,7 @@ import { signToken } from "@/lib/auth/jwt";
 import { AppError } from "@/lib/http/response";
 import { RegisterInput, LoginInput, VerifyEmailInput, ResendVerificationInput } from "@/lib/validation/auth";
 import { generateNumericOTP, hashOTP, OTP_EXPIRATION_MS, RESEND_COOLDOWN_MS } from "@/lib/auth/otp";
-import { sendVerificationOtpEmail, sendPasswordResetOtpEmail } from "@/lib/email/resend";
+import { sendVerificationOtpEmail, sendPasswordResetOtpEmail } from "@/lib/mail";
 
 export class AuthService {
   static async register(input: RegisterInput) {
@@ -71,7 +71,7 @@ export class AuthService {
       return newUser;
     });
 
-    // Deliver OTP email via Resend API
+    // Deliver OTP email via Brevo SMTP
     try {
       await sendVerificationOtpEmail({
         to: user.email,
@@ -253,7 +253,7 @@ export class AuthService {
       select: { displayName: true },
     });
 
-    // Send the OTP via Resend API
+    // Send the OTP via Brevo SMTP
     try {
       await sendVerificationOtpEmail({
         to: user.email,
@@ -466,7 +466,7 @@ export class AuthService {
       select: { displayName: true },
     });
 
-    // Deliver reset code via Resend
+    // Deliver reset code via Brevo SMTP
     try {
       await sendPasswordResetOtpEmail({
         to: user.email,

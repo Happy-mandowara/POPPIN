@@ -144,7 +144,7 @@ export function PostCard({ post, currentUserId, token, isModerator = false, onEd
                 <button
                   type="button"
                   onClick={() => onEdit(post)}
-                  className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/10 transition text-xs"
+                  className="w-8 h-8 flex items-center justify-center text-[#B5BAC1] hover:text-white rounded-xl hover:bg-white/10 active:scale-95 transition-all text-xs"
                   title="Edit post"
                   aria-label="Edit post"
                 >
@@ -156,7 +156,7 @@ export function PostCard({ post, currentUserId, token, isModerator = false, onEd
                   type="button"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="p-1.5 text-zinc-400 hover:text-rose-400 rounded-lg hover:bg-white/10 transition text-xs disabled:opacity-50"
+                  className="w-8 h-8 flex items-center justify-center text-[#B5BAC1] hover:text-rose-400 rounded-xl hover:bg-rose-500/10 active:scale-95 transition-all text-xs disabled:opacity-50"
                   title={isOwner ? "Delete post" : "Delete post (as moderator)"}
                   aria-label="Delete post"
                 >
@@ -252,10 +252,10 @@ export function PostCard({ post, currentUserId, token, isModerator = false, onEd
           {/* Comments Button */}
           <Link
             href={`/posts/${post.id}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#B5BAC1] hover:text-white hover:bg-white/10 active:scale-95 transition-all"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-zinc-400" />
-            <span>{post.commentsCount}</span>
+            <MessageSquare className="w-3.5 h-3.5 text-[#B5BAC1]" />
+            <span className="tabular-nums font-mono text-xs">{post.commentsCount}</span>
           </Link>
 
           {/* Save Button */}
@@ -271,7 +271,7 @@ export function PostCard({ post, currentUserId, token, isModerator = false, onEd
           <button
             type="button"
             onClick={handleShare}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs font-semibold"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[#B5BAC1] hover:text-white hover:bg-white/10 active:scale-95 transition-all text-xs font-semibold"
             title="Copy share link"
           >
             {copiedShare ? (

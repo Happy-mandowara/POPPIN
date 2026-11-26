@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* 3. Main Content Column */}
-      <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
+      <div className="flex-1 flex flex-col min-w-0 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pb-0">
         {/* Top Application Bar */}
         <AppTopbar
           onOpenCreatePost={() => setIsCreatePostOpen(true)}
@@ -92,10 +92,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-x-hidden">{children}</main>
       </div>
 
-      {/* 4. Mobile Bottom Navigation Bar (viewports < 768px) */}
+      {/* 4. Mobile Bottom Navigation Bar (viewports < 768px) with iOS Safe-Area support */}
       <nav
         aria-label="Mobile Navigation"
-        className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-[#1E1F22]/95 backdrop-blur-md border-t border-white/10 z-30 flex items-center justify-around px-2 select-none"
+        className="md:hidden fixed bottom-0 inset-x-0 h-[calc(4rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-[#1E1F22]/95 backdrop-blur-md border-t border-white/10 z-30 flex items-center justify-around px-2 select-none"
       >
         <Link
           href="/feed"

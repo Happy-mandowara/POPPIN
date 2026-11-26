@@ -519,7 +519,7 @@ export function PostComposer({ onPostCreated, token, communityId, placeholder }:
           <button
             type="submit"
             disabled={isSubmitting || isUploadingMedia || !content.trim()}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] disabled:opacity-40 text-white text-xs font-bold rounded-xl shadow-md shadow-[#5865F2]/25 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 text-white text-xs font-bold rounded-xl shadow-md shadow-[#5865F2]/25 transition-all cursor-pointer select-none"
           >
             {isSubmitting ? "Publishing..." : "Publish Post"}
           </button>

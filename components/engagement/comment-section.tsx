@@ -280,8 +280,9 @@ export function CommentSection({
                                 setEditingCommentId(comment.id);
                                 setEditText(comment.content);
                               }}
-                              className="p-1 text-zinc-400 hover:text-white transition"
+                              className="w-7 h-7 flex items-center justify-center text-[#B5BAC1] hover:text-white rounded-lg hover:bg-white/10 active:scale-95 transition"
                               title="Edit"
+                              aria-label="Edit comment"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -289,8 +290,9 @@ export function CommentSection({
                           <button
                             type="button"
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="p-1 text-zinc-400 hover:text-red-400 transition"
+                            className="w-7 h-7 flex items-center justify-center text-[#B5BAC1] hover:text-rose-400 rounded-lg hover:bg-rose-500/10 active:scale-95 transition"
                             title={isAuthor ? "Delete" : "Delete (as moderator)"}
+                            aria-label="Delete comment"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>

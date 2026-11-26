@@ -56,17 +56,17 @@ export function SaveButton({
       type="button"
       onClick={toggleSave}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold select-none transition-all duration-150 active:scale-95 ${
         isSaved
-          ? "text-[#09090B] bg-zinc-100"
-          : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100"
+          ? "text-[#8A9BFF] bg-[#5865F2]/15 border border-[#5865F2]/30 shadow-sm shadow-[#5865F2]/10"
+          : "text-[#B5BAC1] hover:text-[#F2F3F5] hover:bg-white/5 border border-transparent"
       }`}
       title={isSaved ? "Unsave post" : "Save post"}
       aria-label={isSaved ? "Unsave post" : "Save post"}
     >
       <Bookmark
-        className={`w-3.5 h-3.5 transition-transform active:scale-125 ${
-          isSaved ? "fill-zinc-950 stroke-zinc-950" : "fill-none stroke-current"
+        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+          isSaved ? "fill-[#5865F2] stroke-[#5865F2] scale-110" : "fill-none stroke-current"
         }`}
       />
       <span>{isSaved ? "Saved" : "Save"}</span>

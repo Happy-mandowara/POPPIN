@@ -1,31 +1,107 @@
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 import { AppError } from "@/lib/http/response";
 
-let resendClient: Resend | null = null;
+let mailTransporter: Transporter | null = null;
 
-function getResendClient(): Resend {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !apiKey.trim()) {
+function getTransporter(): Transporter {
+  const user = process.env.BREVO_SMTP_USER;
+  const pass = process.env.BREVO_SMTP_KEY;
+
+  if (!user || !user.trim() || !pass || !pass.trim()) {
     throw new AppError(
-      "Resend API key is not configured. Please add RESEND_API_KEY to .env.local",
+      "Brevo SMTP credentials are not configured. Please add BREVO_SMTP_USER and BREVO_SMTP_KEY to .env.local",
       500,
       "EMAIL_CONFIG_MISSING"
     );
   }
 
-  if (!resendClient) {
-    resendClient = new Resend(apiKey.trim());
+  if (!mailTransporter) {
+    mailTransporter = nodemailer.createTransport({
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: user.trim(),
+        pass: pass.trim(),
+      },
+    });
   }
-  return resendClient;
+
+  return mailTransporter;
 }
 
 export function getFromEmail(): string {
-  // Reads EMAIL_FROM or RESEND_FROM_EMAIL, defaulting to Resend's free onboarding sender
+  const senderEmail = process.env.BREVO_SENDER_EMAIL?.trim();
+  if (!senderEmail) {
+    throw new AppError(
+      "Brevo sender email is not configured. Please add BREVO_SENDER_EMAIL to .env.local",
+      500,
+      "EMAIL_CONFIG_MISSING"
+    );
+  }
+
+  return senderEmail.includes("<") ? senderEmail : `Poppin <${senderEmail}>`;
+}
+
+function isTestEnvironmentForEmail(cleanTo: string): boolean {
   return (
-    process.env.EMAIL_FROM ||
-    process.env.RESEND_FROM_EMAIL ||
-    "Poppin <onboarding@resend.dev>"
-  ).trim();
+    process.env.NODE_ENV === "test" ||
+    process.env.IS_TEST_ENV === "true" ||
+    cleanTo.endsWith("@example.com") ||
+    cleanTo.endsWith("@test.com") ||
+    cleanTo.endsWith("@poppin.io") ||
+    cleanTo.endsWith("@poppin.test")
+  );
+}
+
+interface SendEmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}
+
+/**
+ * Send a transactional email via Brevo SMTP using Nodemailer.
+ */
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: SendEmailOptions): Promise<{ id: string }> {
+  const transporter = getTransporter();
+  const from = getFromEmail();
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject,
+      html,
+      text,
+    });
+
+    if (!info || !info.messageId) {
+      throw new AppError(
+        "SMTP email dispatch returned an empty message ID.",
+        502,
+        "EMAIL_DELIVERY_FAILED"
+      );
+    }
+
+    return { id: info.messageId };
+  } catch (err: unknown) {
+    if (err instanceof AppError) {
+      throw err;
+    }
+    const message = err instanceof Error ? err.message : String(err);
+    throw new AppError(
+      `Email service communication failed: ${message}`,
+      502,
+      "EMAIL_SERVICE_ERROR"
+    );
+  }
 }
 
 interface SendVerificationOtpOptions {
@@ -114,8 +190,7 @@ function buildOtpEmailHtml(otp: string, displayName?: string | null): string {
 }
 
 /**
- * Send a 6-digit OTP verification email via the Resend API.
- * Handles Resend test mode restrictions and surfaces clear errors.
+ * Send a 6-digit OTP verification email via Brevo SMTP.
  */
 export async function sendVerificationOtpEmail({
   to,
@@ -124,81 +199,23 @@ export async function sendVerificationOtpEmail({
 }: SendVerificationOtpOptions): Promise<{ id: string }> {
   const cleanTo = to.trim().toLowerCase();
 
-  // In automated test environments or with test mock domains, bypass external API calls
-  const isTestEnvironment =
-    process.env.NODE_ENV === "test" ||
-    process.env.IS_TEST_ENV === "true" ||
-    cleanTo.endsWith("@example.com") ||
-    cleanTo.endsWith("@test.com") ||
-    cleanTo.endsWith("@poppin.io") ||
-    cleanTo.endsWith("@poppin.test");
-
-  if (isTestEnvironment) {
+  if (isTestEnvironmentForEmail(cleanTo)) {
     return { id: `mock-test-email-id-${Date.now()}` };
   }
-
-  const resend = getResendClient();
-  const from = getFromEmail();
 
   const html = buildOtpEmailHtml(otp, displayName);
   const text = `Your POPPIN verification code is: ${otp}. It expires in 10 minutes. If you did not request this code, please ignore this email.`;
 
-  try {
-    const { data, error } = await resend.emails.send({
-      from,
-      to: cleanTo,
-      subject: `Your POPPIN Verification Code: ${otp}`,
-      html,
-      text,
-    });
-
-    if (error) {
-      const errorMsg = error.message || "";
-      const isRestrictedRecipient =
-        errorMsg.toLowerCase().includes("testing emails to your own email address") ||
-        errorMsg.toLowerCase().includes("verify your domain") ||
-        errorMsg.toLowerCase().includes("resend.com/domains") ||
-        error.name === "validation_error";
-
-      if (isRestrictedRecipient) {
-        throw new AppError(
-          "Resend testing mode restriction: Free testing sender (onboarding@resend.dev) can only send emails to the verified Resend account owner's email address. To test, please register with your verified email address or verify a custom domain in Resend.",
-          403,
-          "RESEND_RESTRICTED_RECIPIENT"
-        );
-      }
-
-      throw new AppError(
-        `Failed to deliver verification email: ${errorMsg}`,
-        502,
-        "EMAIL_DELIVERY_FAILED"
-      );
-    }
-
-    if (!data || !data.id) {
-      throw new AppError(
-        "Resend email dispatch returned an empty confirmation ID.",
-        502,
-        "EMAIL_DELIVERY_FAILED"
-      );
-    }
-
-    return { id: data.id };
-  } catch (err: unknown) {
-    if (err instanceof AppError) {
-      throw err;
-    }
-    const message = err instanceof Error ? err.message : String(err);
-    throw new AppError(
-      `Email service communication failed: ${message}`,
-      502,
-      "EMAIL_SERVICE_ERROR"
-    );
-  }
+  return sendEmail({
+    to: cleanTo,
+    subject: `Your POPPIN Verification Code: ${otp}`,
+    html,
+    text,
+  });
 }
 
 /**
- * Send a 6-digit password reset OTP email via Resend API.
+ * Send a 6-digit password reset OTP email via Brevo SMTP.
  */
 export async function sendPasswordResetOtpEmail({
   to,
@@ -207,20 +224,9 @@ export async function sendPasswordResetOtpEmail({
 }: SendVerificationOtpOptions): Promise<{ id: string }> {
   const cleanTo = to.trim().toLowerCase();
 
-  const isTestEnvironment =
-    process.env.NODE_ENV === "test" ||
-    process.env.IS_TEST_ENV === "true" ||
-    cleanTo.endsWith("@example.com") ||
-    cleanTo.endsWith("@test.com") ||
-    cleanTo.endsWith("@poppin.io") ||
-    cleanTo.endsWith("@poppin.test");
-
-  if (isTestEnvironment) {
+  if (isTestEnvironmentForEmail(cleanTo)) {
     return { id: `mock-reset-email-id-${Date.now()}` };
   }
-
-  const resend = getResendClient();
-  const from = getFromEmail();
 
   const formattedOtp = otp.split("").join(" ");
   const greeting = displayName ? `Hi ${displayName},` : "Hello,";
@@ -278,43 +284,10 @@ export async function sendPasswordResetOtpEmail({
 
   const text = `Your POPPIN password reset code is: ${otp}. It expires in 15 minutes. If you did not request this, please ignore this email.`;
 
-  try {
-    const { data, error } = await resend.emails.send({
-      from,
-      to: cleanTo,
-      subject: `Your POPPIN Password Reset Code: ${otp}`,
-      html,
-      text,
-    });
-
-    if (error) {
-      const errorMsg = error.message || "";
-      const isRestrictedRecipient =
-        errorMsg.toLowerCase().includes("testing emails to your own email address") ||
-        errorMsg.toLowerCase().includes("verify your domain") ||
-        errorMsg.toLowerCase().includes("resend.com/domains") ||
-        error.name === "validation_error";
-
-      if (isRestrictedRecipient) {
-        throw new AppError(
-          "Resend testing mode restriction: Free testing sender (onboarding@resend.dev) can only send emails to the verified Resend account owner's email address. To test, please request recovery using your verified email address or verify a custom domain in Resend.",
-          403,
-          "RESEND_RESTRICTED_RECIPIENT"
-        );
-      }
-
-      throw new AppError(`Failed to deliver password reset email: ${errorMsg}`, 502, "EMAIL_DELIVERY_FAILED");
-    }
-
-    if (!data || !data.id) {
-      throw new AppError("Resend email dispatch returned an empty confirmation ID.", 502, "EMAIL_DELIVERY_FAILED");
-    }
-
-    return { id: data.id };
-  } catch (err: unknown) {
-    if (err instanceof AppError) throw err;
-    const message = err instanceof Error ? err.message : String(err);
-    throw new AppError(`Email service communication failed: ${message}`, 502, "EMAIL_SERVICE_ERROR");
-  }
+  return sendEmail({
+    to: cleanTo,
+    subject: `Your POPPIN Password Reset Code: ${otp}`,
+    html,
+    text,
+  });
 }
-

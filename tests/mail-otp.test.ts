@@ -1,9 +1,9 @@
 import "./load-env";
 import { generateNumericOTP, hashOTP, verifyOTP, OTP_EXPIRATION_MS, RESEND_COOLDOWN_MS } from "../lib/auth/otp";
-import { getFromEmail } from "../lib/email/resend";
+import { getFromEmail } from "../lib/mail";
 
 async function runTests() {
-  console.log("--- Starting Resend & OTP Unit Tests ---");
+  console.log("--- Starting Brevo Mail & OTP Unit Tests ---");
 
   // 1. Test OTP Generation
   const otp1 = generateNumericOTP();
@@ -45,18 +45,27 @@ async function runTests() {
   console.log("✔ Expiry (10m) and Resend cooldown (60s) constants passed");
 
   // 4. Test Email From Resolver
-  const fromEmail = getFromEmail();
-  console.log(`Resolved From Email: ${fromEmail}`);
-  if (!fromEmail.includes("onboarding@resend.dev") && !fromEmail.includes("@")) {
-    throw new Error(`Invalid from email: ${fromEmail}`);
+  const previousSender = process.env.BREVO_SENDER_EMAIL;
+  process.env.BREVO_SENDER_EMAIL = "noreply@poppin.test";
+  try {
+    const fromEmail = getFromEmail();
+    console.log(`Resolved From Email: ${fromEmail}`);
+    if (fromEmail !== "Poppin <noreply@poppin.test>") {
+      throw new Error(`Invalid formatted from email: ${fromEmail}`);
+    }
+    console.log("✔ Brevo sender address resolution passed");
+  } finally {
+    if (previousSender === undefined) {
+      delete process.env.BREVO_SENDER_EMAIL;
+    } else {
+      process.env.BREVO_SENDER_EMAIL = previousSender;
+    }
   }
-  console.log("✔ Resend sender address resolution passed");
 
-  console.log("--- All Resend & OTP Unit Tests Passed! ---");
+  console.log("--- All Brevo Mail & OTP Unit Tests Passed! ---");
 }
 
 runTests().catch((err) => {
   console.error("Test failed:", err);
   process.exit(1);
 });
-

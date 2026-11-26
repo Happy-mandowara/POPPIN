@@ -69,20 +69,20 @@ export function LikeButton({
       type="button"
       onClick={toggleLike}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold select-none transition-all duration-150 active:scale-95 ${
         isLiked
-          ? "text-[#09090B] bg-zinc-100"
-          : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100"
+          ? "text-rose-400 bg-rose-500/15 border border-rose-500/30 shadow-sm shadow-rose-500/10"
+          : "text-[#B5BAC1] hover:text-[#F2F3F5] hover:bg-white/5 border border-transparent"
       }`}
       title={isLiked ? "Unlike post" : "Like post"}
       aria-label={isLiked ? "Unlike post" : "Like post"}
     >
       <Heart
-        className={`w-3.5 h-3.5 transition-transform active:scale-125 ${
-          isLiked ? "fill-zinc-950 stroke-zinc-950" : "fill-none stroke-current"
+        className={`w-3.5 h-3.5 transition-transform duration-200 ${
+          isLiked ? "fill-rose-500 stroke-rose-500 scale-110" : "fill-none stroke-current"
         }`}
       />
-      <span>{count}</span>
+      <span className="tabular-nums font-mono text-xs">{count}</span>
     </button>
   );
 }
