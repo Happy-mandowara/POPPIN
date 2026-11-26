@@ -1,4 +1,4 @@
-# POPPIN - Backend (Developer 1: Identity & User Management)
+# POPPIN - Backend
 
 This repository contains the complete backend implementation for **Developer 1 (Identity & User Management)** for the POPPIN social platform, built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and **Prisma ORM**.
 
